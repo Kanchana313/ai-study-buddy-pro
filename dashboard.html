@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - AI-Powered Study Buddy Pro{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1 class="mb-4">Learning Dashboard</h1>
+    
+    <div class="row g-4 mb-4">
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <i class="bi bi-chat-dots-fill display-4 text-primary mb-2"></i>
+                    <h2 class="card-title" id="chat-sessions-count">0</h2>
+                    <p class="card-text">Chat Sessions</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <i class="bi bi-clipboard-check-fill display-4 text-success mb-2"></i>
+                    <h2 class="card-title" id="tests-completed-count">0</h2>
+                    <p class="card-text">Tests Completed</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <i class="bi bi-graph-up display-4 text-info mb-2"></i>
+                    <h2 class="card-title" id="average-score">0%</h2>
+                    <p class="card-text">Average Score</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <i class="bi bi-clock-fill display-4 text-warning mb-2"></i>
+                    <h2 class="card-title" id="study-time">0h</h2>
+                    <p class="card-text">Study Time</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    
+    <!-- ... -->
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    
+    async function fetchDashboardStats() {
+        try {
+            const response = await fetch('/api/dashboard/stats');
+            const data = await response.json();
+            
+            
+            document.getElementById('chat-sessions-count').textContent = data.chat_sessions;
+            document.getElementById('tests-completed-count').textContent = data.tests_completed;
+            document.getElementById('average-score').textContent = data.average_score + '%';
+            document.getElementById('study-time').textContent = data.study_time;
+            
+        } catch (error) {
+            console.error('Error fetching dashboard stats:', error);
+        }
+    }
+
+    
+    document.addEventListener('DOMContentLoaded', fetchDashboardStats);
+</script>
+{% endblock %}

@@ -1,0 +1,192 @@
+{% extends "base.html" %}
+
+{% block title %}Settings - AI-Powered Study Buddy Pro{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">API Settings</h5>
+                </div>
+                <div class="card-body">
+                    <form id="api-settings-form">
+                        <div class="mb-3">
+                            <label for="gemini-api-key" class="form-label">Google Gemini API Key</label>
+                            <input type="password" class="form-control" id="gemini-api-key" placeholder="AIza...">
+                            <div class="form-text">Your Google Gemini API key is used for all AI features. It is stored locally and never sent to our servers.</div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="gemini-model" class="form-label">Gemini Model</label>
+                            <select class="form-select" id="gemini-model">
+                                <option value="gemini-pro">Gemini Pro</option>
+                                <option value="gemini-pro-vision">Gemini Pro Vision</option>
+                            </select>
+                            <div class="form-text">Choose the Gemini model to use for generating responses.</div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="temperature" class="form-label">Temperature</label>
+                            <input type="range" class="form-range" id="temperature" min="0" max="1" step="0.1" value="0.7">
+                            <div class="form-text">Controls randomness: Lower values make responses more focused, higher values more creative.</div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="max-tokens" class="form-label">Max Tokens</label>
+                            <input type="number" class="form-control" id="max-tokens" min="100" max="2000" value="1000">
+                            <div class="form-text">Maximum number of tokens to generate in responses.</div>
+                        </div>
+                        
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary">Save Settings</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Chatbot Settings</h5>
+                </div>
+                <div class="card-body">
+                    <form id="chatbot-settings-form">
+                        <div class="mb-3">
+                            <label for="chatbot-persona" class="form-label">Chatbot Persona</label>
+                            <select class="form-select" id="chatbot-persona">
+                                <option value="friendly and knowledgeable tutor">Friendly Tutor</option>
+                                <option value="formal and academic professor">Formal Professor</option>
+                                <option value="enthusiastic and encouraging coach">Enthusiatic Coach</option>
+                                <option value="concise and direct expert">Direct Expert</option>
+                            </select>
+                            <div class="form-text">Choose the personality style for your AI Study Buddy.</div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="context-length" class="form-label">Context Length</label>
+                            <input type="number" class="form-control" id="context-length" min="5" max="20" value="10">
+                            <div class="form-text">Number of previous messages to remember in conversation.</div>
+                        </div>
+                        
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary">Save Settings</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h5 class="mb-0">About</h5>
+                </div>
+                <div class="card-body">
+                    <p>AI-Powered Study Buddy Pro v1.0</p>
+                    <p>A comprehensive learning assistant that helps you understand complex topics through AI-powered explanations, test simulations, and progress tracking.</p>
+                    <p class="text-muted">This application uses Google's Gemini API to generate responses. You will need an API key to use all features.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // DOM elements
+    const apiSettingsForm = document.getElementById('api-settings-form');
+    const chatbotSettingsForm = document.getElementById('chatbot-settings-form');
+    const temperatureSlider = document.getElementById('temperature');
+    const temperatureValue = document.createElement('span');
+    
+    // Add temperature value display
+    temperatureSlider.parentNode.insertBefore(temperatureValue, temperatureSlider.nextSibling);
+    temperatureValue.textContent = ` (${temperatureSlider.value})`;
+    
+    // Update temperature value display
+    temperatureSlider.addEventListener('input', () => {
+        temperatureValue.textContent = ` (${temperatureSlider.value})`;
+    });
+    
+    // Load settings from localStorage
+    function loadSettings() {
+        // API settings
+        const geminiApiKey = localStorage.getItem('gemini-api-key');
+        if (geminiApiKey) {
+            document.getElementById('gemini-api-key').value = geminiApiKey;
+        }
+        
+        const geminiModel = localStorage.getItem('gemini-model');
+        if (geminiModel) {
+            document.getElementById('gemini-model').value = geminiModel;
+        }
+        
+        const temperature = localStorage.getItem('temperature');
+        if (temperature) {
+            document.getElementById('temperature').value = temperature;
+            temperatureValue.textContent = ` (${temperature})`;
+        }
+        
+        const maxTokens = localStorage.getItem('max-tokens');
+        if (maxTokens) {
+            document.getElementById('max-tokens').value = maxTokens;
+        }
+        
+        // Chatbot settings
+        const chatbotPersona = localStorage.getItem('chatbot-persona');
+        if (chatbotPersona) {
+            document.getElementById('chatbot-persona').value = chatbotPersona;
+        }
+        
+        const contextLength = localStorage.getItem('context-length');
+        if (contextLength) {
+            document.getElementById('context-length').value = contextLength;
+        }
+    }
+    
+    // Save API settings
+    apiSettingsForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        
+        localStorage.setItem('gemini-api-key', document.getElementById('gemini-api-key').value);
+        localStorage.setItem('gemini-model', document.getElementById('gemini-model').value);
+        localStorage.setItem('temperature', document.getElementById('temperature').value);
+        localStorage.setItem('max-tokens', document.getElementById('max-tokens').value);
+        
+        showToast('API settings saved successfully!');
+    });
+    
+    // Save chatbot settings
+    chatbotSettingsForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        
+        localStorage.setItem('chatbot-persona', document.getElementById('chatbot-persona').value);
+        localStorage.setItem('context-length', document.getElementById('context-length').value);
+        
+        showToast('Chatbot settings saved successfully!');
+    });
+    
+    // Show toast notification
+    function showToast(message) {
+        const toast = document.createElement('div');
+        toast.className = 'position-fixed bottom-0 end-0 p-3';
+        toast.style.zIndex = '11';
+        toast.innerHTML = `
+            <div class="toast show" role="alert">
+                <div class="toast-body">
+                    ${message}
+                </div>
+            </div>
+        `;
+        
+        document.body.appendChild(toast);
+        
+        setTimeout(() => {
+            document.body.removeChild(toast);
+        }, 3000);
+    }
+    
+    // Load settings on page load
+    loadSettings();
+</script>
+{% endblock %}

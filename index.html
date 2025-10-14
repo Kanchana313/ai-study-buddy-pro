@@ -1,0 +1,122 @@
+{% extends "base.html" %}
+
+{% block title %}Home - AI-Powered Study Buddy Pro{% endblock %}
+
+{% block content %}
+<div class="hero-section text-center py-5 animate-on-scroll">
+    <div class="container">
+        <h1 class="display-4 fw-bold mb-4">AI-Powered Study Buddy Pro</h1>
+        <p class="lead mb-5">Your personal AI assistant for understanding complex topics</p>
+        <div class="d-flex justify-content-center gap-3">
+            <a href="{{ url_for('chat') }}" class="btn btn-primary btn-lg">
+                <i class="bi bi-chat-dots-fill me-2"></i>Start Chatting
+            </a>
+            <a href="{{ url_for('test') }}" class="btn btn-outline-primary btn-lg">
+                <i class="bi bi-clipboard-check me-2"></i>Take a Test
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="container my-5">
+    <div class="row g-4 mb-4">
+        <div class="col-md-4">
+            <div class="card h-100 feature-card animate-on-scroll">
+                <div class="card-body text-center">
+                    <div class="feature-icon">
+                        <i class="bi bi-chat-dots-fill"></i>
+                    </div>
+                    <h4 class="card-title">AI Chatbot</h4>
+                    <p class="card-text">Chat with our AI assistant to get answers to your questions and explanations of complex topics</p>
+                    <a href="{{ url_for('chat') }}" class="btn btn-outline-primary">Try Now</a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card h-100 feature-card animate-on-scroll">
+                <div class="card-body text-center">
+                    <div class="feature-icon">
+                        <i class="bi bi-clipboard-check-fill"></i>
+                    </div>
+                    <h4 class="card-title">Test Simulation</h4>
+                    <p class="card-text">Take AI-generated tests to evaluate your knowledge and identify areas for improvement</p>
+                    <a href="{{ url_for('test') }}" class="btn btn-outline-primary">Try Now</a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card h-100 feature-card animate-on-scroll">
+                <div class="card-body text-center">
+                    <div class="feature-icon">
+                        <i class="bi bi-speedometer2-fill"></i>
+                    </div>
+                    <h4 class="card-title">Progress Tracking</h4>
+                    <p class="card-text">Monitor your learning progress with detailed analytics and performance metrics</p>
+                    <a href="{{ url_for('dashboard') }}" class="btn btn-outline-primary">View Dashboard</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row g-4 mb-4">
+        <div class="col-md-6">
+            <div class="card h-100 feature-card animate-on-scroll">
+                <div class="card-body text-center">
+                    <div class="feature-icon">
+                        <i class="bi bi-file-text-fill"></i>
+                    </div>
+                    <h4 class="card-title">Topic Summarization</h4>
+                    <p class="card-text">Get concise summaries of long texts to save time and focus on key points</p>
+                    <a href="{{ url_for('chat') }}" class="btn btn-outline-primary">Try Now</a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="card h-100 feature-card animate-on-scroll">
+                <div class="card-body text-center">
+                    <div class="feature-icon">
+                        <i class="bi bi-gear-fill"></i>
+                    </div>
+                    <h4 class="card-title">Customizable Settings</h4>
+                    <p class="card-text">Personalize your learning experience with adjustable AI settings and preferences</p>
+                    <a href="{{ url_for('settings') }}" class="btn btn-outline-primary">Configure</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="how-it-works my-5 py-5 bg-light">
+    <div class="container">
+        <h2 class="text-center mb-5">How It Works</h2>
+        <div class="row g-4">
+            <div class="col-md-4 text-center animate-on-scroll">
+                <div class="step-icon">
+                    <i class="bi bi-1-circle-fill"></i>
+                </div>
+                <h5>Ask Questions</h5>
+                <p>Type your questions to get instant answers from our AI assistant</p>
+            </div>
+            
+            <div class="col-md-4 text-center animate-on-scroll">
+                <div class="step-icon">
+                    <i class="bi bi-2-circle-fill"></i>
+                </div>
+                <h5>Get Explanations</h5>
+                <p>Receive clear, concise explanations tailored to your level of understanding</p>
+            </div>
+            
+            <div class="col-md-4 text-center animate-on-scroll">
+                <div class="step-icon">
+                    <i class="bi bi-3-circle-fill"></i>
+                </div>
+                <h5>Test Your Knowledge</h5>
+                <p>Take AI-generated tests to reinforce your learning and track progress</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

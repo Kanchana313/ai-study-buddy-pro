@@ -1,0 +1,596 @@
+{% extends "base.html" %}
+
+{% block title %}Test - AI-Powered Study Buddy Pro{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Test Settings</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label for="test-topic" class="form-label">Topic</label>
+                        <input type="text" class="form-control" id="test-topic" placeholder="Enter a topic">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="question-count" class="form-label">Number of Questions</label>
+                        <input type="number" class="form-control" id="question-count" min="5" max="20" value="10">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="difficulty" class="form-label">Difficulty</label>
+                        <select class="form-select" id="difficulty">
+                            <option value="easy">Easy</option>
+                            <option value="medium" selected>Medium</option>
+                            <option value="hard">Hard</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="duration" class="form-label">Duration (minutes)</label>
+                        <input type="number" class="form-control" id="duration" min="5" max="60" value="30">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Question Types</label>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="mcq-type" checked>
+                            <label class="form-check-label" for="mcq-type">
+                                Multiple Choice
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="tf-type" checked>
+                            <label class="form-check-label" for="tf-type">
+                                True/False
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="short-type">
+                            <label class="form-check-label" for="short-type">
+                                Short Answer
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div class="d-grid">
+                        <button class="btn btn-primary" id="create-test-btn">
+                            <i class="bi bi-play-circle me-2"></i>Create Test
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-8">
+            <div class="card" id="test-container" style="display: none;">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Test: <span id="test-title"></span></h5>
+                    <div>
+                        <span id="timer" class="badge bg-primary me-2">00:00</span>
+                        <span id="question-counter" class="badge bg-secondary">1/10</span>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div id="test-content">
+                        <!-- Test questions will be loaded here -->
+                    </div>
+                </div>
+                <div class="card-footer d-flex justify-content-between">
+                    <button class="btn btn-outline-secondary" id="prev-btn" disabled>
+                        <i class="bi bi-arrow-left me-1"></i>Previous
+                    </button>
+                    <div>
+                        <button class="btn btn-outline-primary me-2" id="save-btn">Save Progress</button>
+                        <button class="btn btn-success" id="submit-btn">Submit Test</button>
+                    </div>
+                    <button class="btn btn-outline-secondary" id="next-btn" disabled>
+                        Next<i class="bi bi-arrow-right ms-1"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <div class="card" id="results-container" style="display: none;">
+                <div class="card-header">
+                    <h5 class="mb-0">Test Results</h5>
+                </div>
+                <div class="card-body">
+                    <div id="results-content">
+                        <!-- Test results will be displayed here -->
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <button class="btn btn-primary" id="new-test-btn">Take New Test</button>
+                    <button class="btn btn-outline-secondary" id="review-btn">Review Answers</button>
+                </div>
+            </div>
+            
+            <div class="card text-center py-5" id="welcome-container">
+                <div class="card-body">
+                    <i class="bi bi-clipboard-check display-1 text-primary mb-3"></i>
+                    <h4>Test Simulation</h4>
+                    <p class="text-muted">Configure your test settings and click "Create Test" to begin</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="submit-modal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Submit Test</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to submit your test? You cannot change your answers after submission.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="confirm-submit-btn">Submit Test</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // DOM elements
+    const testTopic = document.getElementById('test-topic');
+    const questionCount = document.getElementById('question-count');
+    const difficulty = document.getElementById('difficulty');
+    const duration = document.getElementById('duration');
+    const createTestBtn = document.getElementById('create-test-btn');
+    const testContainer = document.getElementById('test-container');
+    const resultsContainer = document.getElementById('results-container');
+    const welcomeContainer = document.getElementById('welcome-container');
+    const testContent = document.getElementById('test-content');
+    const resultsContent = document.getElementById('results-content');
+    const testTitle = document.getElementById('test-title');
+    const timer = document.getElementById('timer');
+    const questionCounter = document.getElementById('question-counter');
+    const prevBtn = document.getElementById('prev-btn');
+    const nextBtn = document.getElementById('next-btn');
+    const submitBtn = document.getElementById('submit-btn');
+    const saveBtn = document.getElementById('save-btn');
+    const newTestBtn = document.getElementById('new-test-btn');
+    const reviewBtn = document.getElementById('review-btn');
+    const submitModal = new bootstrap.Modal(document.getElementById('submit-modal'));
+    const confirmSubmitBtn = document.getElementById('confirm-submit-btn');
+    
+    // Test state
+    let currentTest = null;
+    let currentQuestion = 0;
+    let answers = {};
+    let timeRemaining = 0;
+    let timerInterval = null;
+    
+    // Create test
+    async function createTest() {
+        const topic = testTopic.value.trim();
+        if (!topic) {
+            alert('Please enter a topic for the test');
+            return;
+        }
+        
+        const numQuestions = parseInt(questionCount.value);
+        const diff = difficulty.value;
+        const dur = parseInt(duration.value);
+        
+        // Get selected question types
+        const questionTypes = [];
+        if (document.getElementById('mcq-type').checked) questionTypes.push('multiple choice');
+        if (document.getElementById('tf-type').checked) questionTypes.push('true/false');
+        if (document.getElementById('short-type').checked) questionTypes.push('short answer');
+        
+        if (questionTypes.length === 0) {
+            alert('Please select at least one question type');
+            return;
+        }
+        
+        try {
+            const response = await fetch('/api/test/create', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    topic: topic,
+                    num_questions: numQuestions,
+                    difficulty: diff,
+                    question_types: questionTypes,
+                    duration: dur
+                })
+            });
+            
+            const data = await response.json();
+            
+            if (data.error) {
+                alert(`Error: ${data.error}`);
+                return;
+            }
+            
+            // Store test ID
+            currentTest = data.test_id;
+            
+            // Start the test
+            startTest();
+        } catch (error) {
+            alert(`Error: ${error.message}`);
+        }
+    }
+    
+    // Start test
+    async function startTest() {
+        try {
+            const response = await fetch('/api/test/start', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    test_id: currentTest
+                })
+            });
+            
+            const data = await response.json();
+            
+            if (data.error) {
+                alert(`Error: ${data.error}`);
+                return;
+            }
+            
+            // Set up test
+            testTitle.textContent = testTopic.value;
+            timeRemaining = data.time_remaining;
+            currentQuestion = 0;
+            answers = {};
+            
+            // Show test container
+            welcomeContainer.style.display = 'none';
+            testContainer.style.display = 'block';
+            resultsContainer.style.display = 'none';
+            
+            // Load first question
+            loadQuestion(data);
+            
+            // Start timer
+            startTimer();
+        } catch (error) {
+            alert(`Error: ${error.message}`);
+            }
+    }
+    
+    // Load question
+    async function loadQuestion(questionData = null) {
+        if (!questionData) {
+            try {
+                const response = await fetch('/api/test/question', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        test_id: currentTest
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.error) {
+                    if (data.error === "No more questions") {
+                        // Test is complete
+                        completeTest();
+                        return;
+                    }
+                    alert(`Error: ${data.error}`);
+                    return;
+                }
+                
+                questionData = data;
+            } catch (error) {
+                alert(`Error: ${error.message}`);
+                return;
+            }
+        }
+        
+        // Update question counter
+        questionCounter.textContent = `${questionData.question_number}/${questionData.total_questions}`;
+        
+        // Render question based on type
+        const question = questionData.question;
+        let html = `
+            <div class="question-container">
+                <h5>${question.question}</h5>
+        `;
+        
+        if (question.type === "multiple choice") {
+            html += '<div class="options-container">';
+            question.options.forEach((option, index) => {
+                html += `
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="answer" id="option-${index}" value="${option}">
+                        <label class="form-check-label" for="option-${index}">
+                            ${option}
+                        </label>
+                    </div>
+                `;
+            });
+            html += '</div>';
+        } else if (question.type === "true/false") {
+            html += `
+                <div class="options-container">
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="answer" id="true-option" value="true">
+                        <label class="form-check-label" for="true-option">
+                            True
+                        </label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="answer" id="false-option" value="false">
+                        <label class="form-check-label" for="false-option">
+                            False
+                        </label>
+                    </div>
+                </div>
+            `;
+        } else if (question.type === "short answer") {
+            html += `
+                <div class="form-group">
+                    <textarea class="form-control" id="short-answer" rows="3" placeholder="Type your answer here..."></textarea>
+                </div>
+            `;
+        }
+        
+        html += '</div>';
+        testContent.innerHTML = html;
+        
+        // Restore previous answer if exists
+        if (answers[currentQuestion]) {
+            if (question.type === "short answer") {
+                document.getElementById('short-answer').value = answers[currentQuestion];
+            } else {
+                const options = document.querySelectorAll('input[name="answer"]');
+                options.forEach(option => {
+                    if (option.value === answers[currentQuestion]) {
+                        option.checked = true;
+                    }
+                });
+            }
+        }
+        
+        // Update navigation buttons
+        prevBtn.disabled = currentQuestion === 0;
+        nextBtn.disabled = currentQuestion === questionData.total_questions - 1;
+    }
+    
+    // Save current answer
+    async function saveAnswer() {
+        let answer = '';
+        
+        const questionType = document.querySelector('.question-container h5').textContent;
+        
+        if (document.getElementById('short-answer')) {
+            answer = document.getElementById('short-answer').value;
+        } else {
+            const selectedOption = document.querySelector('input[name="answer"]:checked');
+            if (selectedOption) {
+                answer = selectedOption.value;
+            }
+        }
+        
+        // Store answer locally
+        answers[currentQuestion] = answer;
+        
+        // Send answer to server
+        try {
+            const response = await fetch('/api/test/answer', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    test_id: currentTest,
+                    answer: answer
+                })
+            });
+            
+            const data = await response.json();
+            
+            if (data.error) {
+                console.error(`Error saving answer: ${data.error}`);
+            }
+        } catch (error) {
+            console.error(`Error saving answer: ${error.message}`);
+        }
+    }
+    
+    // Navigate to next question
+    async function nextQuestion() {
+        await saveAnswer();
+        currentQuestion++;
+        loadQuestion();
+    }
+    
+    // Navigate to previous question
+    async function previousQuestion() {
+        await saveAnswer();
+        currentQuestion--;
+        loadQuestion();
+    }
+    
+    // Start timer
+    function startTimer() {
+        if (timerInterval) {
+            clearInterval(timerInterval);
+        }
+        
+        timerInterval = setInterval(() => {
+            timeRemaining--;
+            
+            const minutes = Math.floor(timeRemaining / 60);
+            const seconds = timeRemaining % 60;
+            timer.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            
+            if (timeRemaining <= 0) {
+                clearInterval(timerInterval);
+                completeTest();
+            }
+        }, 1000);
+    }
+    
+    // Complete test
+    async function completeTest() {
+        if (timerInterval) {
+            clearInterval(timerInterval);
+        }
+        
+        await saveAnswer();
+        
+        try {
+            const response = await fetch('/api/test/complete', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    test_id: currentTest
+                })
+            });
+            
+            const data = await response.json();
+            
+            if (data.error) {
+                alert(`Error: ${data.error}`);
+                return;
+            }
+            
+            // Show results
+            showResults(data);
+        } catch (error) {
+            alert(`Error: ${error.message}`);
+        }
+    }
+    
+    // Show results
+    function showResults(results) {
+        // Hide test container and show results
+        testContainer.style.display = 'none';
+        resultsContainer.style.display = 'block';
+        
+        // Calculate grade
+        let grade = '';
+        let gradeClass = '';
+        
+        if (results.percentage >= 90) {
+            grade = 'A+';
+            gradeClass = 'text-success';
+        } else if (results.percentage >= 80) {
+            grade = 'A';
+            gradeClass = 'text-success';
+        } else if (results.percentage >= 70) {
+            grade = 'B';
+            gradeClass = 'text-primary';
+        } else if (results.percentage >= 60) {
+            grade = 'C';
+            gradeClass = 'text-warning';
+        } else {
+            grade = 'D';
+            gradeClass = 'text-danger';
+        }
+        
+        // Display results
+        resultsContent.innerHTML = `
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-body text-center">
+                            <h2 class="${gradeClass}">${grade}</h2>
+                            <h4>${results.percentage}%</h4>
+                            <p class="text-muted">${results.correct_answers} out of ${results.total_questions} correct</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5>Test Details</h5>
+                            <p><strong>Topic:</strong> ${results.topic}</p>
+                            <p><strong>Difficulty:</strong> ${results.difficulty}</p>
+                            <p><strong>Time Taken:</strong> ${Math.floor(results.time_taken / 60)} minutes ${Math.round(results.time_taken % 60)} seconds</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Answer Review</h5>
+                </div>
+                <div class="card-body">
+                    ${results.detailed_results.map((result, index) => `
+                        <div class="mb-3 p-3 border rounded ${result.is_correct ? 'bg-success bg-opacity-10' : 'bg-danger bg-opacity-10'}">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div class="flex-grow-1">
+                                    <h6>Question ${index + 1}: ${result.question}</h6>
+                                    <p><strong>Your Answer:</strong> ${result.user_answer || 'Not answered'}</p>
+                                    <p><strong>Correct Answer:</strong> ${result.correct_answer}</p>
+                                    ${result.explanation ? `<p><strong>Explanation:</strong> ${result.explanation}</p>` : ''}
+                                </div>
+                                <div>
+                                    ${result.is_correct ? 
+                                        '<i class="bi bi-check-circle-fill text-success fs-4"></i>' : 
+                                        '<i class="bi bi-x-circle-fill text-danger fs-4"></i>'
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+        `;
+    }
+    
+    // Create new test
+    function newTest() {
+        // Reset test state
+        currentTest = null;
+        currentQuestion = 0;
+        answers = {};
+        timeRemaining = 0;
+        
+        if (timerInterval) {
+            clearInterval(timerInterval);
+        }
+        
+        // Show welcome container
+        welcomeContainer.style.display = 'block';
+        testContainer.style.display = 'none';
+        resultsContainer.style.display = 'none';
+    }
+    
+    // Event listeners
+    createTestBtn.addEventListener('click', createTest);
+    prevBtn.addEventListener('click', previousQuestion);
+    nextBtn.addEventListener('click', nextQuestion);
+    saveBtn.addEventListener('click', saveAnswer);
+    submitBtn.addEventListener('click', () => {
+        submitModal.show();
+    });
+    confirmSubmitBtn.addEventListener('click', () => {
+        submitModal.hide();
+        completeTest();
+    });
+    newTestBtn.addEventListener('click', newTest);
+    reviewBtn.addEventListener('click', () => {
+        // Scroll to results
+        resultsContent.scrollIntoView({ behavior: 'smooth' });
+    });
+</script>
+{% endblock %}

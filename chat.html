@@ -1,0 +1,325 @@
+{% extends "base.html" %}
+
+{% block title %}Chat - AI-Powered Study Buddy Pro{% endblock %}
+
+{% block content %}
+<div class="container-fluid h-100">
+    <div class="row h-100">
+        <div class="col-lg-3 border-end">
+            <div class="p-3">
+                <h5 class="mb-3">Quick Actions</h5>
+                <div class="mb-3">
+                    <label for="concept-input" class="form-label">Explain a Concept</label>
+                    <div class="input-group">
+                        <input type="text" class="form-control" id="concept-input" placeholder="Enter a concept">
+                        <button class="btn btn-outline-primary" type="button" id="explain-btn">Explain</button>
+                    </div>
+                </div>
+                
+                <div class="mb-3">
+                    <label for="level-select" class="form-label">Explanation Level</label>
+                    <select class="form-select" id="level-select">
+                        <option value="beginner">Beginner</option>
+                        <option value="intermediate">Intermediate</option>
+                        <option value="advanced">Advanced</option>
+                    </select>
+                </div>
+                
+                <div class="d-grid gap-2">
+                    <button class="btn btn-outline-secondary" id="clear-chat-btn">
+                        <i class="bi bi-arrow-clockwise me-2"></i>Clear Chat
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-9">
+            <div class="card h-100">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">AI Study Buddy</h5>
+                    <div>
+                        <span id="connection-status" class="badge bg-success me-2">Connected</span>
+                    </div>
+                </div>
+                <div class="card-body chat-messages" id="chat-messages">
+                    <div class="message bot-message">
+                        <div class="message-content">
+                            <div class="d-flex align-items-center mb-2">
+                                <div class="avatar bot-avatar me-2">
+                                    <i class="bi bi-robot"></i>
+                                </div>
+                                <strong>AI Study Buddy</strong>
+                            </div>
+                            <p>Hello! I'm your AI Study Buddy. I can help you understand complex topics, answer questions, and assist with your learning. How can I help you today?</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer chat-input">
+                    <div class="input-group">
+                        <input type="text" class="form-control" id="message-input" placeholder="Type your message here...">
+                        <button class="btn btn-primary" type="button" id="send-btn">
+                            <i class="bi bi-send-fill"></i>
+                        </button>
+                    </div>
+                    <div class="mt-2 text-center">
+                        <small class="text-muted">Press Enter to send your message</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="explanation-modal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Concept Explanation</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="explanation-content">
+                <div class="d-flex justify-content-center">
+                    <div class="spinner-border" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Store session ID from template
+    const sessionId = "{{ session_id }}";
+    
+    // DOM elements
+    const messageInput = document.getElementById('message-input');
+    const sendBtn = document.getElementById('send-btn');
+    const chatMessages = document.getElementById('chat-messages');
+    const clearChatBtn = document.getElementById('clear-chat-btn');
+    const conceptInput = document.getElementById('concept-input');
+    const explainBtn = document.getElementById('explain-btn');
+    const levelSelect = document.getElementById('level-select');
+    const explanationModal = new bootstrap.Modal(document.getElementById('explanation-modal'));
+    const explanationContent = document.getElementById('explanation-content');
+    const connectionStatus = document.getElementById('connection-status');
+    
+    // Add message to chat
+    function addMessage(content, isUser = false) {
+        const messageDiv = document.createElement('div');
+        messageDiv.className = `message ${isUser ? 'user-message' : 'bot-message'} animate-on-scroll`;
+        
+        const messageContent = document.createElement('div');
+        messageContent.className = 'message-content';
+        
+        const avatarDiv = document.createElement('div');
+        avatarDiv.className = `avatar ${isUser ? 'user-avatar' : 'bot-avatar'} me-2`;
+        avatarDiv.innerHTML = isUser ? '<i class="bi bi-person-fill"></i>' : '<i class="bi bi-robot"></i>';
+        
+        const nameStrong = document.createElement('strong');
+        nameStrong.textContent = isUser ? 'You' : 'AI Study Buddy';
+        
+        const headerDiv = document.createElement('div');
+        headerDiv.className = 'd-flex align-items-center mb-2';
+        headerDiv.appendChild(avatarDiv);
+        headerDiv.appendChild(nameStrong);
+        
+        const messageText = document.createElement('p');
+        messageText.textContent = content;
+        
+        messageContent.appendChild(headerDiv);
+        messageContent.appendChild(messageText);
+        messageDiv.appendChild(messageContent);
+        
+        chatMessages.appendChild(messageDiv);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+        
+        // Trigger animation
+        setTimeout(() => {
+            messageDiv.classList.add('animated');
+        }, 100);
+    }
+    
+    // Show typing indicator
+    function showTypingIndicator() {
+        const typingDiv = document.createElement('div');
+        typingDiv.className = 'message bot-message typing-indicator';
+        typingDiv.id = 'typing-indicator';
+        
+        const messageContent = document.createElement('div');
+        messageContent.className = 'message-content';
+        
+        const avatarDiv = document.createElement('div');
+        avatarDiv.className = 'avatar bot-avatar me-2';
+        avatarDiv.innerHTML = '<i class="bi bi-robot"></i>';
+        
+        const nameStrong = document.createElement('strong');
+        nameStrong.textContent = 'AI Study Buddy';
+        
+        const headerDiv = document.createElement('div');
+        headerDiv.className = 'd-flex align-items-center mb-2';
+        headerDiv.appendChild(avatarDiv);
+        headerDiv.appendChild(nameStrong);
+        
+        const typingText = document.createElement('div');
+        typingText.className = 'typing-dots';
+        typingText.innerHTML = '<span></span><span></span><span></span>';
+        
+        messageContent.appendChild(headerDiv);
+        messageContent.appendChild(typingText);
+        typingDiv.appendChild(messageContent);
+        
+        chatMessages.appendChild(typingDiv);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+    
+    // Hide typing indicator
+    function hideTypingIndicator() {
+        const typingIndicator = document.getElementById('typing-indicator');
+        if (typingIndicator) {
+            typingIndicator.remove();
+        }
+    }
+    
+    // Send message to API
+    async function sendMessage() {
+        const message = messageInput.value.trim();
+        if (!message) return;
+        
+        // Add user message to chat
+        addMessage(message, true);
+        messageInput.value = '';
+        
+        // Show typing indicator
+        showTypingIndicator();
+        
+        try {
+            const response = await fetch('/api/chat', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    message: message,
+                    session_id: sessionId
+                })
+            });
+            
+            const data = await response.json();
+            
+            // Hide typing indicator
+            hideTypingIndicator();
+            
+            if (data.error) {
+                addMessage(`Error: ${data.error}`);
+            } else {
+                addMessage(data.response);
+            }
+        } catch (error) {
+            hideTypingIndicator();
+            addMessage(`Error: ${error.message}`);
+            connectionStatus.textContent = 'Disconnected';
+            connectionStatus.className = 'badge bg-danger me-2';
+        }
+    }
+    
+    // Explain concept
+    async function explainConcept() {
+        const concept = conceptInput.value.trim();
+        if (!concept) return;
+        
+        const level = levelSelect.value;
+        
+        // Show modal with loading indicator
+        explanationContent.innerHTML = `
+            <div class="d-flex justify-content-center">
+                <div class="spinner-border" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+            </div>
+        `;
+        explanationModal.show();
+        
+        try {
+            const response = await fetch('/api/explain', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    concept: concept,
+                    level: level
+                })
+            });
+            
+            const data = await response.json();
+            
+            if (data.error) {
+                explanationContent.innerHTML = `<div class="alert alert-danger">${data.error}</div>`;
+            } else {
+                explanationContent.innerHTML = `
+                    <h6>Concept: ${data.concept}</h6>
+                    <p>Level: ${data.level}</p>
+                    <hr>
+                    <p>${data.explanation}</p>
+                `;
+            }
+        } catch (error) {
+            explanationContent.innerHTML = `<div class="alert alert-danger">Error: ${error.message}</div>`;
+        }
+    }
+    
+    // Clear chat
+    async function clearChat() {
+        try {
+            const response = await fetch('/api/clear_chat', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    session_id: sessionId
+                })
+            });
+            
+            // Clear chat messages
+            chatMessages.innerHTML = `
+                <div class="message bot-message">
+                    <div class="message-content">
+                        <div class="d-flex align-items-center mb-2">
+                            <div class="avatar bot-avatar me-2">
+                                <i class="bi bi-robot"></i>
+                            </div>
+                            <strong>AI Study Buddy</strong>
+                        </div>
+                        <p>Hello! I'm your AI Study Buddy. I can help you understand complex topics, answer questions, and assist with your learning. How can I help you today?</p>
+                    </div>
+                </div>
+            `;
+        } catch (error) {
+            console.error('Error clearing chat:', error);
+        }
+    }
+    
+    // Event listeners
+    sendBtn.addEventListener('click', sendMessage);
+    messageInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            sendMessage();
+        }
+    });
+    
+    clearChatBtn.addEventListener('click', clearChat);
+    explainBtn.addEventListener('click', explainConcept);
+    conceptInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            explainConcept();
+        }
+    });
+</script>
+{% endblock %}
